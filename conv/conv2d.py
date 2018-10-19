@@ -24,7 +24,7 @@ class Conv2D:
         self.stride=stride
         self.padding=padding
 
-        self.weights=th.randn([c_out,c_in,k_size[0],k_size[1]])
+        self.weights=th.randn([c_out,c_in,k_size[0],k_size[1]])*.01
         self.bias=th.randn([c_out])
         self.bias[:]=0 # set to zero.... 
 

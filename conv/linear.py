@@ -8,7 +8,8 @@ class Linear:
         
         self.weights=th.randn([feat_out,feat_in])
         self.bias=th.randn([feat_out])
-
+        self.bias[:]=0
+        
         self.last_x=None
 
     def __call__(self,x):

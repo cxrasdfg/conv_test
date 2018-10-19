@@ -32,7 +32,9 @@ def create_model():
     return model
 
 def forward_model(m,x):
-    for layer in m:
+    for i,layer in enumerate(m):
+        if i==14:
+            print(i)
         x=layer(x)
     return x
 
@@ -43,7 +45,7 @@ def backward_and_optimize(m,dx,lr):
 def main():
     
     print('handy convolutional test...')
-    lr=2.
+    lr=.5
     batch_size=32
     num_workers=0
     epoches=10
@@ -69,7 +71,8 @@ def main():
             gt_=th.zeros(batch_size,10)
             gt_[th.arange(batch_size).long(),gt]=1
             gt=gt_
-
+            
+            x=x*2-1
             res=forward_model(model,x) # [b,10]
             loss=loss_func(res,gt)
             dx=loss_func.backward_and_update(None,None)
