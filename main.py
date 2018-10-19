@@ -13,19 +13,32 @@ from conv import Conv2D,MaxPool2D,Flatten,Linear,MSE,Relu,Sigmoid
 
 def create_model():
     model=[]
-    model.append(Conv2D(1,128,(3,3),(1,1),(0,0))) # [b,128,26,26]
-    model.append(Relu())
-    model.append(Conv2D(128,64,(3,3),(1,1),(0,0))) # [b,64,24,24]
-    model.append(Relu())
-    model.append(MaxPool2D((2,2),(2,2),(0,0))) # [b,64,12,12]
-    model.append(Conv2D(64,128,(3,3),(1,1),(0,0))) # [b,128,10,10]
-    model.append(Relu())
+    # model.append(Conv2D(1,128,(3,3),(1,1),(0,0))) # [b,128,26,26]
+    # model.append(Relu())
+    # model.append(Conv2D(128,64,(3,3),(1,1),(0,0))) # [b,64,24,24]
+    # model.append(Relu())
+    # model.append(MaxPool2D((2,2),(2,2),(0,0))) # [b,64,12,12]
+    # model.append(Conv2D(64,128,(3,3),(1,1),(0,0))) # [b,128,10,10]
+    # model.append(Relu())
 
-    model.append(Conv2D(128,128,(3,3),(1,1),(0,0))) # [b,128,8,8]
-    model.append(MaxPool2D((2,2),(2,2),(0,0))) # [b,128,4,4]
+    # model.append(Conv2D(128,128,(3,3),(1,1),(0,0))) # [b,128,8,8]
+    # model.append(MaxPool2D((2,2),(2,2),(0,0))) # [b,128,4,4]
+    # model.append(Relu())
+    # model.append(Flatten()) # [b,128*4*4]
+    model.append(Linear(28*28,256))
+    model.append(Sigmoid())
     model.append(Relu())
-    model.append(Flatten()) # [b,128*4*4]
-    model.append(Linear(128*4*4,512)) # [b,512]
+    model.append(Linear(256,256)) # [b,512]
+    model.append(Sigmoid())
+    model.append(Relu())
+    model.append(Linear(256,256)) # [b,512]
+    model.append(Sigmoid())
+    model.append(Relu())
+    model.append(Linear(256,256)) # [b,512]
+    model.append(Sigmoid())
+    model.append(Relu())
+    model.append(Linear(256,512)) # [b,512]
+    model.append(Sigmoid())
     model.append(Relu())
     model.append(Linear(512,10)) # [b,10]
     model.append(Sigmoid())
@@ -45,7 +58,7 @@ def backward_and_optimize(m,dx,lr):
 def main():
     
     print('handy convolutional test...')
-    lr=.5
+    lr=1
     batch_size=32
     num_workers=0
     epoches=10
@@ -72,7 +85,8 @@ def main():
             gt_[th.arange(batch_size).long(),gt]=1
             gt=gt_
             
-            x=x*2-1
+            # x=x*2-1
+            x=x.view(batch_size,-1)
             res=forward_model(model,x) # [b,10]
             loss=loss_func(res,gt)
             dx=loss_func.backward_and_update(None,None)

@@ -6,10 +6,10 @@ class Linear:
         self.in_=feat_in
         self.out_=feat_out
         
-        self.weights=th.randn([feat_out,feat_in])
+        self.weights=th.randn([feat_out,feat_in])*.01
         self.bias=th.randn([feat_out])
         self.bias[:]=0
-        
+
         self.last_x=None
 
     def __call__(self,x):
@@ -69,7 +69,7 @@ class Linear:
         return dx
     
 def main():
-    x=th.arange(2*3).view(2,3)
+    x=th.randn(2,3)
     m=Linear(3,5)
     m2=th.nn.Linear(3,5)
     m2.weight.data.copy_(m.weights)
