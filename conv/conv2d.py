@@ -28,7 +28,9 @@ class Conv2D:
         self.bias=th.randn([c_out])
         self.bias[:]=0 # set to zero.... 
 
+        # patches of the proceeding layer's output
         self.last_patches=None
+        # output of the proceeding layer...
         self.last_x=None
 
     def __call__(self,x):
@@ -256,8 +258,11 @@ class Conv2D:
         padded_x=padded_x.permute(2,3,0,1).contiguous()
 
         # 6. clip
-        padded_x =padded_x[...,padding[0]:-padding[0],padding[1]:-padding[1]] # [b,c,h,w]
-
+        if padding[0] != 0:
+            padded_x =padded_x[...,padding[0]:-padding[0],:] # [b,c,h,w]
+        if padding[1] !=0:
+            padded_x =padded_x[...,padding[1]:-padding[1]] # [b,c,h,w]
+        
         return padded_x
 
 
@@ -271,6 +276,7 @@ def main():
     patches2=m2(x)
     print(x)
     print(patches)
+    print('error checking counter:',(patches!=patches2).sum() )
     dx=m.backward_and_update(patches.clone(),.1)
     print(dx)
     # cum_add=m.backward(x,patches)
