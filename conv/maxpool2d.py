@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import torch as th
-from conv2d import Conv2D
+from .conv2d import Conv2D
 class MaxPool2D(Conv2D):
     def __init__(self,k_size,stride,padding):
         super(MaxPool2D,self).__init__(0,0,k_size,stride,padding)
