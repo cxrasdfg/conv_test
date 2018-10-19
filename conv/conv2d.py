@@ -25,7 +25,11 @@ class Conv2D:
         self.padding=padding
 
         self.weights=th.randn([c_out,c_in,k_size[0],k_size[1]])
-        self.bias=th.randn([c_out]) 
+        self.bias=th.randn([c_out])
+        self.bias[:]=0 # set to zero.... 
+
+        self.last_patches=None
+        self.last_x=None
 
     def __call__(self,x):
         return self.forward(x)
@@ -37,32 +41,71 @@ class Conv2D:
         Return:
             x (th.tensor[float32]): [b,c_out,h_out,w_out]
         """
+        self.last_x=x
         b,c_in,h,w=x.shape
         c_out=self.channels_out
         k_size=self.kernel_size
         # 1. change to matrix mul
-        # [b,c_in*k_size_h*k_size_w,num_patch], num_patch=nh*nw
-        patches,nh,nw=self._img2col(x)
-        num_patch=nh*nw
+        # [b,c_in*k_size_h*k_size_w,num_patch], num_patch=h_out*w_out
+        patches,h_out,w_out=self._img2col(x)
+        num_patch=h_out*w_out
         
-        # 2. w.mm(patches)+bias
+        # 2. w @ patches + bias
         weights=self.weights.view(-1,c_in*k_size[0]*k_size[1]) # [c_out,c_in*k_size[0]*k_size[1]]
         bias=self.bias[None,:,None].expand(b,c_out,num_patch) # [b,c_out,num_patch]
         x=weights @ patches + bias # [b,c_out,num_patch]
 
         # 3. reshape
-        x=x.view(b,c_out,nh,nw)
+        x=x.view(b,c_out,h_out,w_out)
+
+        # 4. store the patch
+        self.last_patches=patches
+
         return x
 
-    def backward(self,x,dx):
-        r"""Backward function
+    def backward_and_update(self,dx,lr):
+        r"""Apply backward and update parameters by gradient descend
         Args:
-            dx (th.tensor[float32]): [b,c_out,h_out,w_out]
+            dx (th.tensor[float32]): dx in the succeed layer, 
+        shape: [b,c_out,h_out,w_out]
+            lr (float): learning rate
         Return:
-            dx (th.tensor[float32]): [b,c_out,h_out,w_out] 
+            dx (th.tensor[float32]): dx in the this layer,
+        shape: [b,c_out,h_in,w_in] 
         """
-        return self._col2img(dx,x.shape)
-    
+        k_size=self.kernel_size
+        b,c_out,h_out,w_out=dx.shape
+        
+        # [b,c_out,h_out*w_out]
+        dx=dx.view(b,c_out,-1)
+        c_in=self.channels_in
+        # [c_out,c_in*k_size[0]*k_size[1]]
+        weights=self.weights.view(-1,c_in*k_size[0]*k_size[1]) 
+
+        # 1. calculate dpatches
+        # w @ patch + bias = x ==> dpatches=w.T @ dx
+        dpatches=weights.t() @ dx  # [b,c_in*k_size[0]*k_size[1],h_out*w_out]
+        dpatches=self._col2img(dpatches,self.last_x.shape) # [b,c,h,w]
+        
+        # 2. calculate dw
+        # dw=dx @ patch.T
+        # [b,c_out,c_in*k_size_h*k_size_w]
+        dweight=dx @ self.last_patches.permute(0,2,1).contiguous() 
+        
+        # 3. calculate dbias
+        # dbias=dx
+        dbias=dx # [b,c_out,h_out*w_out]
+
+        # 4. update dx, weight and bias
+        dx=dpatches # [b,c,h,w]
+        
+        # [c_out,c_in,k_size[0],k_size[1]]
+        self.weights-=lr * dweight.view(b,c_out,c_in,k_size[0],k_size[1]).sum(dim=0)
+
+        self.bias-=lr* dbias.sum(dim=0).sum(dim=1) # [c_out]
+
+        return dx
+
     def get_indices(self,h,w,k_size,stride,padding):
         r""" Get the indices for the patches 
         Args:
@@ -74,8 +117,8 @@ class Conv2D:
         Return:
             steps_at_i (torch.tensor[long]):
             steps_at_j (torch.tensor[long]):
-            index_at_i (torch.tensor[long]):
-            index_at_j (torch.tensor[long]):
+            index_at_i (torch.tensor[long]): [steps_at_i,steps_at_j,k_size[0]*k_size[1]]
+            index_at_j (torch.tensor[long]): [steps_at_i,steps_at_j,k_size[0]*k_size[1]]
         """
         # 1. counter in x_axis and y_axis, the output feature map size
         steps_at_i=(h+2*padding[0]-k_size[0])// stride[0]+1
@@ -228,7 +271,8 @@ def main():
     patches2=m2(x)
     print(x)
     print(patches)
-    
+    dx=m.backward_and_update(patches.clone(),.1)
+    print(dx)
     # cum_add=m.backward(x,patches)
     # print(cum_add)
 
