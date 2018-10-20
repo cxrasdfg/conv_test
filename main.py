@@ -56,6 +56,33 @@ def backward_and_optimize(m,dx,lr):
     for layer in m[::-1]:
         dx=layer.backward_and_update(dx,lr)
 
+def preprocess(x,is_conv=False):
+    r"""
+    Args:
+        x (th.tensor[float32]): [b,28,28]
+    Return:
+        x (th.tensor[float32]): [b,?]
+    """
+    b=x.shape[0]
+    x=x*2-1
+    if not is_conv:
+        x=x.view(b,-1)
+
+    return x
+
+def eval(model,data_loader):
+    counter=0
+    tp=0.0
+    for x,gt in tqdm(data_loader):
+        b=x.shape[0]
+        x=preprocess(x)
+        res=forward_model(model,x) # [b,10]
+        acc=res.argmax(dim=1) # [b]
+        counter+=b
+        tp+=float(((acc==gt).sum())) 
+    
+    return tp/counter 
+
 def main():
     
     print('handy convolutional test...')
@@ -74,6 +101,14 @@ def main():
         drop_last=False,
         num_workers=num_workers
     )
+
+    test_data_loader=DataLoader(
+        test_data_set,
+        batch_size=8000,
+        shuffle=False,
+        drop_last=False,
+        num_workers=16
+    )
     
     model=create_model()
     loss_func=MSE()
@@ -88,8 +123,8 @@ def main():
             
             if epoch==10:
                 print(iteration)
-            x=x*2-1
-            x=x.view(b,-1)
+
+            x=preprocess(x)
             res=forward_model(model,x) # [b,10]
             acc=res.argmax(dim=1) # [b]
             acc=float(((acc==gt).sum())) /b
@@ -104,6 +139,7 @@ def main():
 
             # time.sleep(1)
         
+        print('acc on test:%.5f' % eval(model,test_data_loader))
         epoch+=1
         
 
