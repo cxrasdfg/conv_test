@@ -45,6 +45,28 @@ def create_model():
     model.append(Sigmoid())
     return model
 
+
+def create_model_conv():
+    model=[]
+    model.append(Conv2D(1,128,(3,3),(1,1),(0,0))) # [b,128,26,26]
+    model.append(Relu())
+    model.append(Conv2D(128,64,(3,3),(1,1),(0,0))) # [b,64,24,24]
+    model.append(Relu())
+    model.append(MaxPool2D((2,2),(2,2),(0,0))) # [b,64,12,12]
+    model.append(Conv2D(64,128,(3,3),(1,1),(0,0))) # [b,128,10,10]
+    model.append(Relu())
+
+    model.append(Conv2D(128,128,(3,3),(1,1),(0,0))) # [b,128,8,8]
+    model.append(MaxPool2D((2,2),(2,2),(0,0))) # [b,128,4,4]
+    model.append(Relu())
+    model.append(Flatten()) # [b,128*4*4]
+    model.append(Linear(128*4*4,512))
+    model.append(Relu())
+    model.append(Linear(512,10)) # [b,10]
+    model.append(Sigmoid())
+    return model
+
+
 def forward_model(m,x):
     for i,layer in enumerate(m):
         if i==14:
@@ -56,7 +78,7 @@ def backward_and_optimize(m,dx,lr):
     for layer in m[::-1]:
         dx=layer.backward_and_update(dx,lr)
 
-def preprocess(x,is_conv=False):
+def preprocess(x,is_conv=True):
     r"""
     Args:
         x (th.tensor[float32]): [b,28,28]
@@ -86,8 +108,8 @@ def eval(model,data_loader):
 def main():
     
     print('handy convolutional test...')
-    lr=1e-3
-    batch_size=256
+    lr=1e-4
+    batch_size=64
     num_workers=4
     epoches=20
 
@@ -110,7 +132,7 @@ def main():
         num_workers=16
     )
     
-    model=create_model()
+    model=create_model_conv()
     loss_func=MSE()
     epoch=0
     iteration=0

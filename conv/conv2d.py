@@ -24,7 +24,7 @@ class Conv2D:
         self.stride=stride
         self.padding=padding
 
-        self.weights=th.randn([c_out,c_in,k_size[0],k_size[1]])*.01
+        self.weights=th.randn([c_out,c_in,k_size[0],k_size[1]])
         self.bias=th.randn([c_out])
         self.bias[:]=0 # set to zero.... 
 
@@ -148,12 +148,12 @@ class Conv2D:
         idx_at_j=idx_at_j[None,None].expand(steps_at_i,steps_at_j,-1,-1).long()
         
         # plus the offset
-        idx_at_i+=offset_at_i
-        idx_at_j+=offset_at_j
+        idx_at_i=idx_at_i+offset_at_i
+        idx_at_j=idx_at_j+offset_at_j
 
         # reshape
         # [steps_at_i,steps_at_j,k_size[0]*k_size[1]]
-        idx_at_i=idx_at_i.view(steps_at_i,steps_at_j,-1) 
+        idx_at_i=idx_at_i.view(steps_at_i,steps_at_j,-1)
         # [steps_at_i,steps_at_j,k_size[0]*k_size[1]]
         idx_at_j=idx_at_j.view(steps_at_i,steps_at_j,-1)
 
