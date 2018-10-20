@@ -8,6 +8,7 @@ from torchvision.transforms import ToTensor
 from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import time
 
 from conv import Conv2D,MaxPool2D,Flatten,Linear,MSE,Relu,Sigmoid
 
@@ -27,19 +28,19 @@ def create_model():
     # model.append(Flatten()) # [b,128*4*4]
     model.append(Linear(28*28,256))
     model.append(Sigmoid())
-    model.append(Relu())
+    # model.append(Relu())
     model.append(Linear(256,256)) # [b,512]
     model.append(Sigmoid())
-    model.append(Relu())
+    # model.append(Relu())
     model.append(Linear(256,256)) # [b,512]
     model.append(Sigmoid())
-    model.append(Relu())
+    # model.append(Relu())
     model.append(Linear(256,256)) # [b,512]
     model.append(Sigmoid())
-    model.append(Relu())
+    # model.append(Relu())
     model.append(Linear(256,512)) # [b,512]
     model.append(Sigmoid())
-    model.append(Relu())
+    # model.append(Relu())
     model.append(Linear(512,10)) # [b,10]
     model.append(Sigmoid())
     return model
@@ -58,10 +59,10 @@ def backward_and_optimize(m,dx,lr):
 def main():
     
     print('handy convolutional test...')
-    lr=1
-    batch_size=32
-    num_workers=0
-    epoches=10
+    lr=1e-3
+    batch_size=256
+    num_workers=4
+    epoches=20
 
     train_data_set=MNIST('./data/',train=True,transform=ToTensor())
     test_data_set=MNIST('./data/',train=False,transform=ToTensor())
@@ -81,23 +82,31 @@ def main():
     while epoch<epoches:
         for x,gt in tqdm(train_data_loader):
             # junk...
-            gt_=th.zeros(batch_size,10)
-            gt_[th.arange(batch_size).long(),gt]=1
-            gt=gt_
+            b=x.shape[0]
+            gt_=th.zeros(b,10)
+            gt_[th.arange(b).long(),gt]=1
             
-            # x=x*2-1
-            x=x.view(batch_size,-1)
+            if epoch==10:
+                print(iteration)
+            x=x*2-1
+            x=x.view(b,-1)
             res=forward_model(model,x) # [b,10]
+            acc=res.argmax(dim=1) # [b]
+            acc=float(((acc==gt).sum())) /b
+
+            gt=gt_
+
             loss=loss_func(res,gt)
             dx=loss_func.backward_and_update(None,None)
             backward_and_optimize(model,dx,lr)
-            tqdm.write("Epoch:%d, Iteration:%d, Loss:%.3f"%(epoch,iteration,loss))
+            tqdm.write("Epoch:%d, Iteration:%d, Loss:%.3f, Acc:%.3f"%(epoch,iteration,loss,acc))
             iteration+=1
+
+            # time.sleep(1)
         
         epoch+=1
         
 
-    models=[]
 
 if __name__ == '__main__':
     main()

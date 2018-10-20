@@ -6,7 +6,7 @@ class Linear:
         self.in_=feat_in
         self.out_=feat_out
         
-        self.weights=th.randn([feat_out,feat_in])*.01
+        self.weights=th.rand([feat_out,feat_in])*2-1
         self.bias=th.randn([feat_out])
         self.bias[:]=0
 
