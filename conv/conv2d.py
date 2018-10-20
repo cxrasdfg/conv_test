@@ -238,7 +238,7 @@ class Conv2D:
         padded_x=padded_x.view(-1,b,c) # [ph*pw,b,c]
     
         indices=idx_at_i*padded_w+idx_at_j # [steps_at_i,steps_at_j,k_size[0]*k_size[1]]
-        indices=indices.view(-1) # [steps_at_i*steps_at_j*k_size[0]*k_size[1]]
+        indices=indices.view(-1).type_as(padded_x).long() # [steps_at_i*steps_at_j*k_size[0]*k_size[1]]
         
         # [b,c,k_size[0]*k_size[1],steps_at_i,steps_at_j]
         patches=patches.view(b,c,k_size[0]*k_size[1],steps_at_i,steps_at_j)
@@ -265,9 +265,21 @@ class Conv2D:
         
         return padded_x
 
+    def cuda(self,did):
+        if hasattr(self,'weights'):
+            self.weights = self.weights.cuda(did)
+        if hasattr(self,'bias'):
+            self.bias=self.bias.cuda(did)
+    
+    def cpu(self):
+        if hasattr(self,'weights'):
+            self.weights=self.weights.cpu()
+        if hasattr(self,'bias'):
+            self.bias=self.bias.cpu()
 
 def main():
-    x=th.arange(2*3*3*6).view(2,3,3,6)
+    x=th.arange(2*3*3*6).view(2,3,3,6).float()
+    x=th.randn(2,3,3,6).float()    
     m=Conv2D(3,5,(3,1),(2,1),(1,1))
     m2=th.nn.Conv2d(3,5,(3,1),(2,1),padding=(1,1))
     m2.weight.data.copy_(m.weights)

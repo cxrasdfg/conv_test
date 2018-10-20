@@ -67,7 +67,15 @@ class Linear:
         self.bias-=lr*dbias.sum(dim=0)
 
         return dx
+
+    def cuda(self,did):
+        self.weights = self.weights.cuda(did)
+        self.bias=self.bias.cuda(did)
     
+    def cpu(self):
+        self.weights=self.weights.cpu()
+        self.bias=self.bias.cpu()
+        
 def main():
     x=th.randn(2,3)
     m=Linear(3,5)
