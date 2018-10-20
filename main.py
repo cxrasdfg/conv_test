@@ -12,7 +12,7 @@ import time
 
 from conv import Conv2D,MaxPool2D,Flatten,Linear,MSE,Relu,Sigmoid
 
-IS_CUDA=False
+IS_CUDA=True
 DID=0
 
 def create_model():
@@ -121,7 +121,7 @@ def main():
     
     print('handy convolutional test...')
     lr=1e-3
-    batch_size=64
+    batch_size=256
     num_workers=4
     epoches=20
    
@@ -139,10 +139,10 @@ def main():
 
     test_data_loader=DataLoader(
         test_data_set,
-        batch_size=128,
+        batch_size=batch_size,
         shuffle=False,
         drop_last=False,
-        num_workers=16
+        num_workers=num_workers
     )
     
     model=create_model_conv()
