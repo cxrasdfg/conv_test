@@ -124,9 +124,9 @@ def eval(model,data_loader):
 def main():
     
     print('handy convolutional test...')
-    lr=1e-3
+    lr=.05
     batch_size=256
-    num_workers=4
+    num_workers=0
     epoches=20
    
 
