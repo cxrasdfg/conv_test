@@ -3,7 +3,6 @@
 class LeakyRelu:
     def __init__(self,negative_slope=1e-2):
         self.last_x=None
-        self.last_mask=None
         self.negative_slope=negative_slope
 
     def __call__(self,x):
@@ -23,12 +22,8 @@ class LeakyRelu:
             x (tensor[float32]): [b,c,h,w] or [b,in_]
         """
         self.last_x=x
-        
-        mask=(x>=0)
-        
-        x[1-mask]*=self.negative_slope
-
-        self.last_mask=mask
+        # x[1-mask]*=self.negative_slope
+        x = x * (x>=0).float()+x*(x<0).float()*self.negative_slope
 
         return x
     
@@ -40,7 +35,9 @@ class LeakyRelu:
             dx (tensor[float32]): [b,c,h,w] or [b,in_]
         """
         
-        dx[1-self.last_mask]*=self.negative_slope
+        # dx[1-self.last_mask]*=self.negative_slope
+        x=self.last_x
+        dx=dx*(x>=0).float() + dx*(x<0).float()*self.negative_slope
 
         return dx
 
