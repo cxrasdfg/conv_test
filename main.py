@@ -51,21 +51,22 @@ def create_model():
 
 def create_model_conv():
     model=[]
-    model.append(Conv2D(1,32,(3,3),(1,1),(0,0))) # [b,32,26,26]
+    model.append(Conv2D(1,10,(5,5),(1,1),(0,0))) # [b,32,26,26]
     # model.append(Sigmoid())
-    # model.append(Relu())
-    model.append(LeakyRelu())
-    model.append(Conv2D(32,64,(3,3),(1,1),(0,0))) # [b,64,24,24]
+    model.append(Relu())
+    # model.append(LeakyRelu())
+    model.append(MaxPool2D((2,2),(2,2),(0,0))) # [b,64,12,12]
+    model.append(Conv2D(10,20,(5,5),(1,1),(0,0))) # [b,64,24,24]
     # model.append(Sigmoid())
-    # model.append(Relu())
-    model.append(LeakyRelu())
+    model.append(Relu())
+    # model.append(LeakyRelu())
     model.append(MaxPool2D((2,2),(2,2),(0,0))) # [b,64,12,12]
     model.append(Flatten()) # [b,64*12*12]
-    model.append(Linear(64*12*12,128))
-    model.append(LeakyRelu())
-    # model.append(Relu())
+    model.append(Linear(320,50))
+    # model.append(LeakyRelu())
+    model.append(Relu())
     # model.append(Sigmoid())
-    model.append(Linear(128,10)) # [b,10]
+    model.append(Linear(50,10)) # [b,10]
     model.append(Sigmoid())
     return model
 
