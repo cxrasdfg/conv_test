@@ -25,6 +25,8 @@ class Conv2D:
         self.padding=padding
 
         self.weights=th.randn([c_out,c_in,k_size[0],k_size[1]])
+        if self.weights.dim()==4:
+            th.nn.init.kaiming_normal_(self.weights)
         self.bias=th.randn([c_out])
         self.bias[:]=0 # set to zero.... 
 
