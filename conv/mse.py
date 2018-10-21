@@ -42,7 +42,7 @@ class MSE:
             dx (tensor[float32]): [b,in_]
         """
         dx=self.last_x-self.last_gt
-
+        dx=dx/self.last_x.shape[0]
         return dx
 
 def main():
