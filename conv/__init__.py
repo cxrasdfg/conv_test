@@ -3,5 +3,5 @@ from .maxpool2d import MaxPool2D
 from .flatten import Flatten
 from .linear import Linear
 from .mse import MSE
-from .relu import Relu
+from .relu import Relu,LeakyRelu
 from .sigmoid import Sigmoid

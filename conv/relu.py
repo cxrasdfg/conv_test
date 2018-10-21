@@ -1,9 +1,11 @@
 # coding=utf-8
 
-class Relu:
-    def __init__(self):
+class LeakyRelu:
+    def __init__(self,negative_slope=1e-2):
         self.last_x=None
         self.last_mask=None
+        self.negative_slope=negative_slope
+
     def __call__(self,x):
         r"""
         Args:
@@ -22,9 +24,9 @@ class Relu:
         """
         self.last_x=x
         
-        mask=(x>0)
+        mask=(x>=0)
         
-        x[1-mask]=0
+        x[1-mask]*=self.negative_slope
 
         self.last_mask=mask
 
@@ -38,6 +40,13 @@ class Relu:
             dx (tensor[float32]): [b,c,h,w] or [b,in_]
         """
         
-        dx[1-self.last_mask]=0
+        dx[1-self.last_mask]*=self.negative_slope
 
         return dx
+
+class Relu(LeakyRelu):
+    def __init__(self):
+        super(Relu,self).__init__(0)
+
+
+
