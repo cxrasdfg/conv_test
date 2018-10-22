@@ -1,16 +1,17 @@
 # coding=utf-8
 import torch as th 
-rand_seed=1234
+rand_seed=1
 th.manual_seed(rand_seed)
 th.cuda.manual_seed(rand_seed)
-
+from torchvision import transforms
 from torchvision.transforms import ToTensor
 from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import time
 
-from conv import Conv2D,MaxPool2D,Flatten,Linear,MSE,Relu,LeakyRelu,Sigmoid
+from conv import Conv2D,MaxPool2D,Flatten,\
+    Linear,MSE,Relu,LeakyRelu,Sigmoid,CrossEntropy,Softmax
 
 IS_CUDA=True
 DID=0
@@ -53,21 +54,21 @@ def create_model_conv():
     model=[]
     model.append(Conv2D(1,10,(5,5),(1,1),(0,0))) # [b,32,26,26]
     # model.append(Sigmoid())
-    model.append(Relu())
     # model.append(LeakyRelu())
     model.append(MaxPool2D((2,2),(2,2),(0,0))) # [b,64,12,12]
+    model.append(Relu())
     model.append(Conv2D(10,20,(5,5),(1,1),(0,0))) # [b,64,24,24]
     # model.append(Sigmoid())
-    model.append(Relu())
     # model.append(LeakyRelu())
     model.append(MaxPool2D((2,2),(2,2),(0,0))) # [b,64,12,12]
+    model.append(Relu())
     model.append(Flatten()) # [b,64*12*12]
     model.append(Linear(320,50))
     # model.append(LeakyRelu())
     model.append(Relu())
     # model.append(Sigmoid())
     model.append(Linear(50,10)) # [b,10]
-    model.append(Sigmoid())
+    model.append(Softmax())
     return model
 
 
@@ -124,14 +125,20 @@ def eval(model,data_loader):
 def main():
     
     print('handy convolutional test...')
-    lr=.05
-    batch_size=256
+    lr=1e-2
+    batch_size=512
     num_workers=0
     epoches=20
    
 
-    train_data_set=MNIST('./data/',train=True,transform=ToTensor())
-    test_data_set=MNIST('./data/',train=False,transform=ToTensor())
+    train_data_set=MNIST('./data/',train=True,transform=transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.1307,), (0.3081,))
+                       ]))
+    test_data_set=MNIST('./data/',train=False,transform=transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.1307,), (0.3081,))
+                       ]))
 
     train_data_loader=DataLoader(
         train_data_set,
@@ -153,7 +160,8 @@ def main():
     if IS_CUDA:
         cuda(model,DID)
 
-    loss_func=MSE()
+    loss_func=CrossEntropy()
+    # loss_func=MSE()
     epoch=0
     iteration=0
     while epoch<epoches:

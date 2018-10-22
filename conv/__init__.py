@@ -5,3 +5,5 @@ from .linear import Linear
 from .mse import MSE
 from .relu import Relu,LeakyRelu
 from .sigmoid import Sigmoid
+from .softmax import Softmax
+from .crossentropy import CrossEntropy
