@@ -1,6 +1,8 @@
 # coding=utf-8
 
 import torch as th
+import math
+
 class Linear:
     def __init__(self,feat_in,feat_out):
         self.in_=feat_in
@@ -9,8 +11,15 @@ class Linear:
         self.weights=th.rand([feat_out,feat_in])*2-1
         self.bias=th.randn([feat_out])
         self.bias[:]=0
-
+        
+        self.reset_parameters()
+        
         self.last_x=None
+    def reset_parameters(self):
+        stdv = 1. / math.sqrt(self.weights.size(1))
+        self.weights.data.uniform_(-stdv, stdv)
+        if self.bias is not None:
+            self.bias.data.uniform_(-stdv, stdv)
 
     def __call__(self,x):
         r"""

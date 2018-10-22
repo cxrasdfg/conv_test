@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import torch as th 
+import math
 
 class Conv2D:
     def __init__(self,c_in,c_out,k_size,stride,padding):
@@ -28,12 +29,24 @@ class Conv2D:
         # if self.weights.dim()==4:
             # th.nn.init.kaiming_normal_(self.weights)
         self.bias=th.randn([c_out])
-        self.bias[:]=0 # set to zero.... 
+        self.reset_parameters()
+        # self.bias[:]=0 # set to zero.... 
 
         # patches of the proceeding layer's output
         self.last_patches=None
         # output of the proceeding layer...
         self.last_x=None
+
+    def reset_parameters(self):
+        n = self.channels_in
+        if n==0:
+            return 
+        for k in self.kernel_size:
+            n *= k
+        stdv = 1. / math.sqrt(n)
+        self.weights.data.uniform_(-stdv, stdv)
+        if self.bias is not None:
+            self.bias.data.uniform_(-stdv, stdv)
 
     def __call__(self,x):
         return self.forward(x)
